@@ -1,4 +1,4 @@
-module reverse.go
+module reverse
 
 go 1.17
 
