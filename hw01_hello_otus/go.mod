@@ -1,3 +1,5 @@
-module github.com/fixme_my_friend/hw01_hello_otus
+module reverse
 
-go 1.16
+go 1.17
+
+require golang.org/x/example v0.0.0-20210811190340-787a929d5a0d
