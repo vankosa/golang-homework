@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/cheggaaa/pb/v3"
+	pb "github.com/cheggaaa/pb/v3"
 )
 
 var ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
