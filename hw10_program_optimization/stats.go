@@ -1,12 +1,11 @@
 package hw10programoptimization
 
 import (
-	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
-	"io/ioutil"
-	"regexp"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 type User struct {
@@ -22,46 +21,59 @@ type User struct {
 type DomainStat map[string]int
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	u, err := getUsers(r)
-	if err != nil {
-		return nil, fmt.Errorf("get users error: %w", err)
-	}
-	return countDomains(u, domain)
+	return countDomains(r, domain)
 }
 
-type users [100_000]User
+func getUsers(r io.Reader) (chan User, chan error) {
+	dataChan := make(chan User, 100_0)
+	errChan := make(chan error)
 
-func getUsers(r io.Reader) (result users, err error) {
-	content, err := ioutil.ReadAll(r)
-	if err != nil {
-		return
-	}
+	dec := jsoniter.NewDecoder(r)
 
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
-		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
-			return
+	go func() {
+		for {
+			var user User
+			err := dec.Decode(&user)
+			if err != nil && !errors.Is(err, io.EOF) {
+				errChan <- err
+				break
+			}
+
+			dataChan <- user
+
+			if errors.Is(err, io.EOF) {
+				break
+			}
 		}
-		result[i] = user
-	}
-	return
+		close(dataChan)
+	}()
+
+	return dataChan, errChan
 }
 
-func countDomains(u users, domain string) (DomainStat, error) {
+func countDomains(r io.Reader, domain string) (DomainStat, error) {
+	dataChan, errChan := getUsers(r)
+
 	result := make(DomainStat)
 
-	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
+	for {
+		select {
+		case user, ok := <-dataChan:
+
+			if !ok {
+				return result, nil
+			}
+
+			matched := strings.HasSuffix(user.Email, "."+domain)
+
+			if matched {
+				baseRaw := strings.Split(user.Email, "@")
+				base := strings.ToLower(baseRaw[1])
+				result[base]++
+			}
+
+		case err := <-errChan:
 			return nil, err
 		}
-
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
-			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
-		}
 	}
-	return result, nil
 }
