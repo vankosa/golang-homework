@@ -16,6 +16,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if err != nil {
 		return err
 	}
+	defer fromFile.Close()
 
 	fromFileInfo, err := fromFile.Stat()
 	if err != nil {
@@ -38,6 +39,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if err != nil {
 		return err
 	}
+	defer writer.Close()
 
 	fromFile.Seek(offset, 0)
 	reader := io.LimitReader(fromFile, limit)
