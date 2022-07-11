@@ -68,3 +68,47 @@ func TestRun(t *testing.T) {
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
 }
+
+func TestAdditional(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	t.Run("null n and m", func(t *testing.T) {
+		var finished int32
+		tasks := []Task{}
+
+		for i := 1; i <= 3; i++ {
+			taskSleep := time.Millisecond * 30
+			tasks = append(tasks, func() error {
+				time.Sleep(taskSleep)
+				atomic.AddInt32(&finished, 1)
+				return nil
+			})
+		}
+
+		err := Run(tasks, 0, 0)
+		require.Nil(t, err)
+
+		time.Sleep(time.Millisecond * 30 * 3)
+		require.Equal(t, finished, int32(0))
+	})
+
+	t.Run("n > tasks", func(t *testing.T) {
+		var finished int32
+		tasks := []Task{}
+
+		for i := 1; i <= 3; i++ {
+			taskSleep := time.Millisecond * 30
+			tasks = append(tasks, func() error {
+				time.Sleep(taskSleep)
+				atomic.AddInt32(&finished, 1)
+				return nil
+			})
+		}
+
+		err := Run(tasks, 10, 1)
+		require.Nil(t, err)
+
+		time.Sleep(time.Millisecond * 30 * 3)
+		require.Equal(t, finished, int32(3))
+	})
+}
