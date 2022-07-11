@@ -80,3 +80,24 @@ func TestTop10(t *testing.T) {
 		}
 	})
 }
+
+func TestAdditionalTests(t *testing.T) {
+	t.Run("less than 10 elements", func(t *testing.T) {
+		expected := []string{
+			"eee",
+			"ff",
+			"tt",
+		}
+		require.Equal(t, expected, Top10("ff  ff  eee eee  tt"))
+	})
+
+	t.Run("alphabet sort", func(t *testing.T) {
+		expected := []string{
+			"aa",
+			"cc",
+			"xx",
+			"zz",
+		}
+		require.Equal(t, expected, Top10("zz cc xx aa aa xx zz cc "))
+	})
+}
