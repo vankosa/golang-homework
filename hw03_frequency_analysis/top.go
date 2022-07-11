@@ -23,6 +23,11 @@ func Top10(s string) []string {
 		keys = append(keys, key)
 	}
 
+	n := 10
+	if len(keys) < 10 {
+		n = len(keys)
+	}
+
 	sort.SliceStable(keys, func(i, j int) bool {
 		if wordsMap[keys[i]] == wordsMap[keys[j]] {
 			return keys[i] < keys[j]
@@ -31,5 +36,5 @@ func Top10(s string) []string {
 		return wordsMap[keys[i]] > wordsMap[keys[j]]
 	})
 
-	return keys[:10]
+	return keys[:n]
 }
